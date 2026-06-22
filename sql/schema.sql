@@ -82,7 +82,7 @@ INSERT INTO auth.users (
   raw_app_meta_data, raw_user_meta_data, is_super_admin, is_sso_user
 )
 SELECT
-  '00000000-0000-0000-0000-000000000000',
+  (SELECT id FROM auth.instances LIMIT 1),
   gen_random_uuid(),
   'authenticated',
   'authenticated',
@@ -95,9 +95,10 @@ SELECT
   false
 WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@spf.io');
 
--- Always ensure the password is current (handles re-runs where user already exists)
+-- Always ensure the password + instance_id is current
 UPDATE auth.users
-SET encrypted_password = crypt('adminspfio123', gen_salt('bf')),
+SET instance_id = (SELECT id FROM auth.instances LIMIT 1),
+    encrypted_password = crypt('adminspfio123', gen_salt('bf')),
     email_confirmed_at = COALESCE(email_confirmed_at, now()),
     updated_at = now()
 WHERE email = 'admin@spf.io';
