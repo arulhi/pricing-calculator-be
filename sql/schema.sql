@@ -96,14 +96,15 @@ SELECT
 WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@spf.io');
 
 INSERT INTO auth.identities (
-  id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+  provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at, email
 )
 SELECT
-  gen_random_uuid(),
+  email,
   id,
   jsonb_build_object('sub', id::text, 'email', email),
   'email',
-  now(), now(), now()
+  now(), now(), now(),
+  email
 FROM auth.users
 WHERE email = 'admin@spf.io'
   AND NOT EXISTS (SELECT 1 FROM auth.identities WHERE provider = 'email' AND user_id = auth.users.id);
