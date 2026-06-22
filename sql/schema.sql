@@ -76,6 +76,11 @@ INSERT INTO addons (id, name, description, price, unit) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed admin user (requires pgcrypto, enabled by default in Supabase)
+-- First, clean up any duplicate admin users (from re-running earlier schema versions)
+DELETE FROM public.admin_users WHERE email = 'admin@spf.io';
+DELETE FROM auth.identities WHERE user_id IN (SELECT id FROM auth.users WHERE email = 'admin@spf.io');
+DELETE FROM auth.users WHERE email = 'admin@spf.io';
+
 INSERT INTO auth.users (
   instance_id, id, aud, role, email, encrypted_password,
   email_confirmed_at, created_at, updated_at,
@@ -92,16 +97,7 @@ SELECT
   '{"provider":"email","providers":["email"]}',
   '{}',
   false,
-  false
-WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@spf.io');
-
--- Always ensure the password + instance_id is current
-UPDATE auth.users
-SET instance_id = (SELECT id FROM auth.instances LIMIT 1),
-    encrypted_password = crypt('adminspfio123', gen_salt('bf')),
-    email_confirmed_at = COALESCE(email_confirmed_at, now()),
-    updated_at = now()
-WHERE email = 'admin@spf.io';
+  false;
 
 INSERT INTO auth.identities (
   provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
