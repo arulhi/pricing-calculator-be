@@ -19,5 +19,5 @@
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true
   },
-  "exclude": ["scripts", "api"]
+  "exclude": ["scripts"]
 }

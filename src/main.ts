@@ -7,27 +7,8 @@ import { AppModule } from './app.module'
 import express from 'express'
 import { Request, Response, NextFunction } from 'express'
 
-const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'https://spf.io',
-  /\.vercel\.app$/,
-]
-
 function corsMiddleware(req: Request, res: Response, next: NextFunction) {
-  const origin = req.headers.origin
-
-  if (origin) {
-    const allowed = ALLOWED_ORIGINS.some((o) =>
-      typeof o === 'string' ? o === origin : o.test(origin),
-    )
-    if (allowed) {
-      res.setHeader('Access-Control-Allow-Origin', origin)
-      res.setHeader('Access-Control-Allow-Credentials', 'true')
-    }
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', '*')
-  }
-
+  res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
