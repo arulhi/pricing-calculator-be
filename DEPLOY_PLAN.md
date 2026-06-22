@@ -7,7 +7,9 @@ Two services need to be set up:
 | Service | Purpose |
 |---|---|
 | **Supabase** | PostgreSQL database + Auth |
-| **Vercel** | Hosting the NestJS API |
+| **Render** | Hosting the NestJS API (recommended for long-running Node apps) |
+
+> **Note:** NestJS is designed as a long-running server, not serverless. Render is recommended over Vercel because it runs a persistent Node.js process. Vercel alternatives are listed at the bottom.
 
 ---
 
@@ -110,44 +112,32 @@ Check that:
 
 ---
 
-## Step 3 — Deploy to Vercel
+## Step 3 — Deploy to Render
 
-### 3.1 Prepare Repo
+[Render](https://render.com) is recommended over Vercel for NestJS because it runs a persistent Node.js process.
 
-```bash
-# From the backend directory
-git init                          # if not already a git repo
-git add .
-git commit -m "Initial backend"
-```
+### 3.1 Create a Render Account
 
-Create a GitHub repository and push:
+1. Go to [render.com](https://render.com) and sign up (GitHub login works)
+2. Click **New + > Web Service**
+3. Connect your GitHub repository
 
-```bash
-gh repo create spfio-api --public --push --source=.
-# OR manually:
-# git remote add origin https://github.com/your-username/spfio-api.git
-# git push -u origin main
-```
-
-### 3.2 Import to Vercel
-
-1. Go to [vercel.com](https://vercel.com) and sign in
-2. Click **Add New > Project**
-3. Select your `spfio-api` repository
-4. Configure the project:
+### 3.2 Configure the Web Service
 
 | Setting | Value |
 |---|---|
-| **Framework Preset** | Other |
-| **Root Directory** | `./` |
-| **Build Command** | `npm run build` |
-| **Output Directory** | `dist` |
-| **Node.js Version** | 20.x (or latest LTS) |
+| **Name** | `spfio-api` |
+| **Region** | Pick the closest to your audience |
+| **Branch** | `main` |
+| **Root Directory** | (leave empty) |
+| **Runtime** | Node |
+| **Build Command** | `npm install && npm run build` |
+| **Start Command** | `node dist/main` |
+| **Plan** | Free (or Starter for $7/month) |
 
 ### 3.3 Add Environment Variables
 
-In Vercel's project settings, go to **Settings > Environment Variables** and add:
+In Render dashboard, go to your service > **Environment** and add:
 
 | Name | Value |
 |---|---|
@@ -156,32 +146,44 @@ In Vercel's project settings, go to **Settings > Environment Variables** and add
 | `JWT_SECRET` | Your generated secret |
 | `JWT_EXPIRES_IN` | `7d` |
 | `NODE_ENV` | `production` |
+| `PORT` | `10000` (Render uses this internally) |
 
 ### 3.4 Deploy
 
-1. Click **Deploy**
-2. Wait for the build (~1-2 minutes)
-3. Vercel will assign a URL like `https://spfio-api.vercel.app`
+1. Click **Create Web Service**
+2. Render will build and deploy automatically (~3-5 minutes)
+3. Once done, you get a URL like `https://spfio-api.onrender.com`
 
 ### 3.5 Verify Deployment
 
 ```bash
-# Test public endpoints
-curl https://spfio-api.vercel.app/api/service-types
-curl https://spfio-api.vercel.app/api/addons
+curl https://spfio-api.onrender.com/api/service-types
+curl https://spfio-api.onrender.com/api/addons
 
-# Test login
-curl -X POST https://spfio-api.vercel.app/api/auth/login \
+curl -X POST https://spfio-api.onrender.com/api/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"username":"admin@spf.io","password":"admin123"}'
-
-# Swagger docs
-open https://spfio-api.vercel.app/api/docs
 ```
 
 ### 3.6 Redeploy on Changes
 
-Push to `main` branch — Vercel auto-deploys. Or trigger manually from Vercel dashboard.
+Push to `main` branch — Render auto-deploys. Or click **Manual Deploy** from the Render dashboard.
+
+---
+
+## Alternative — Deploy to Vercel (experimental)
+
+NestJS is designed for long-running servers, but can be deployed to Vercel with limitations.
+
+1. Remove the `start:prod` script's listener in `main.ts` (Vercel doesn't support `app.listen`)
+2. The `handler` export in `main.ts` uses `@vendia/serverless-express` which translates API Gateway events to Express
+3. Set `vercel-build` script: `"vercel-build": "npm run build"`
+4. Configure in Vercel:
+   - **Framework Preset:** Other
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist/`
+
+> ⚠️ **Known issues:** Vercel uses esbuild for serverless functions, which doesn't support `emitDecoratorMetadata`. The pre-compiled `dist/` output may not bundle correctly. Render or Railway are more reliable choices for NestJS.
 
 ---
 
