@@ -75,43 +75,15 @@ INSERT INTO addons (id, name, description, price, unit) VALUES
   ('polls', 'Multilingual Polls', 'Interactive polls in multiple languages', 25, 'event')
 ON CONFLICT (id) DO NOTHING;
 
--- Seed admin user (requires pgcrypto, enabled by default in Supabase)
--- First, clean up any duplicate admin users (from re-running earlier schema versions)
-DELETE FROM public.admin_users WHERE email = 'admin@spf.io';
-DELETE FROM auth.identities WHERE user_id IN (SELECT id FROM auth.users WHERE email = 'admin@spf.io');
-DELETE FROM auth.users WHERE email = 'admin@spf.io';
+-- WARNING: Do NOT insert users directly into auth.users or auth.identities.
+-- The auth schema is managed by GoTrue (Supabase Auth) and direct INSERT can
+-- corrupt internal state (e.g., missing instance_id, generated columns).
+-- Instead, create admin users via:
+--   1. Supabase Dashboard → Authentication → Add User (with Auto Confirm)
+--   2. scripts/seed.ts (uses GoTrue Admin API)
+--   3. Direct Admin API call: POST /auth/v1/admin/users
 
-INSERT INTO auth.users (
-  instance_id, id, aud, role, email, encrypted_password,
-  email_confirmed_at, created_at, updated_at,
-  raw_app_meta_data, raw_user_meta_data, is_super_admin, is_sso_user
-)
-SELECT
-  (SELECT id FROM auth.instances LIMIT 1),
-  gen_random_uuid(),
-  'authenticated',
-  'authenticated',
-  'admin@spf.io',
-  crypt('adminspfio123', gen_salt('bf')),
-  now(), now(), now(),
-  '{"provider":"email","providers":["email"]}',
-  '{}',
-  false,
-  false;
-
-INSERT INTO auth.identities (
-  provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
-)
-SELECT
-  email,
-  id,
-  jsonb_build_object('sub', id::text, 'email', email),
-  'email',
-  now(), now(), now()
-FROM auth.users
-WHERE email = 'admin@spf.io'
-  AND NOT EXISTS (SELECT 1 FROM auth.identities WHERE provider = 'email' AND user_id = auth.users.id);
-
+-- Ensure admin_users table has the matching record
 INSERT INTO public.admin_users (id, email)
 SELECT id, email FROM auth.users WHERE email = 'admin@spf.io'
 ON CONFLICT (email) DO NOTHING;
