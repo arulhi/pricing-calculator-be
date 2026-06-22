@@ -1,4 +1,6 @@
 -- Admin users (managed by Supabase Auth, store profile)
+-- The admin user is created via scripts/seed.ts, not seeded here,
+-- because the UUID comes from Supabase Auth at creation time.
 CREATE TABLE admin_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
