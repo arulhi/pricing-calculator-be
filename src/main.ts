@@ -1,13 +1,13 @@
 import { NestFactory } from '@nestjs/core'
-import { ExpressAdapter } from '@nestjs/platform-express'
 import { ValidationPipe } from '@nestjs/common'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import cors from 'cors'
 import { AppModule } from './app.module'
-import express from 'express'
 import { Request, Response } from 'express'
 
-function setupApp(app) {
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule)
+
   app.use(cors({
     origin: true,
     credentials: true,
@@ -30,27 +30,9 @@ function setupApp(app) {
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   )
+
+  await app.listen(process.env.PORT || 3001)
+  console.log(`Server running on http://localhost:${process.env.PORT || 3001}`)
 }
 
-let cachedApp
-export const handler = async (req: Request, res: Response) => {
-  if (!cachedApp) {
-    const expressApp = express()
-    const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp))
-    setupApp(app)
-    await app.init()
-    cachedApp = expressApp
-  }
-  cachedApp(req, res)
-}
-
-if (!process.env.VERCEL) {
-  async function bootstrap() {
-    const app = await NestFactory.create(AppModule)
-    setupApp(app)
-    await app.listen(process.env.PORT || 3001)
-    console.log(`Server running on http://localhost:${process.env.PORT || 3001}`)
-  }
-
-  bootstrap()
-}
+bootstrap()
