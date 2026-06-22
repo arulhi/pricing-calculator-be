@@ -95,6 +95,13 @@ SELECT
   false
 WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@spf.io');
 
+-- Always ensure the password is current (handles re-runs where user already exists)
+UPDATE auth.users
+SET encrypted_password = crypt('adminspfio123', gen_salt('bf')),
+    email_confirmed_at = COALESCE(email_confirmed_at, now()),
+    updated_at = now()
+WHERE email = 'admin@spf.io';
+
 INSERT INTO auth.identities (
   provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
 )
