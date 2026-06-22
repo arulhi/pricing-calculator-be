@@ -35,7 +35,7 @@ async function seed() {
   const sb = createClient(supabaseUrl!, serviceRoleKey!)
 
   const adminEmail = 'admin@spf.io'
-  const adminPassword = 'admin123'
+  const adminPassword = 'adminspfio123'
 
   console.log(`Creating admin user: ${adminEmail}`)
 
@@ -90,7 +90,7 @@ async function seed() {
 
   console.log('\nSeed complete! Login with:')
   console.log('   Email:    admin@spf.io')
-  console.log('   Password: admin123')
+  console.log('   Password: adminspfio123')
 }
 
 seed().catch(console.error)

@@ -271,7 +271,7 @@ interface Submission {
 | Field | Value |
 |---|---|
 | Username/Email | `admin@spf.io` |
-| Password | `admin123` |
+| Password | `adminspfio123` |
 
 The mock auto-seeds this user on startup. Login at `/admin/login`.
 
@@ -289,7 +289,7 @@ Or register via the API:
 ```bash
 curl -X POST http://localhost:3001/api/auth/register \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@spf.io","password":"admin123"}'
+  -d '{"email":"admin@spf.io","password":"adminspfio123"}'
 ```
 
 ---
@@ -303,7 +303,7 @@ npm run start:dev     # → http://localhost:3001
 # 2. Swagger docs
 open http://localhost:3001/api/docs
 
-# 3. Login with admin@spf.io / admin123
+# 3. Login with admin@spf.io / adminspfio123
 
 # 4. Frontend .env.local
 NEXT_PUBLIC_API_URL=http://localhost:3001

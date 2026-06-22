@@ -31,7 +31,7 @@ interface AuthUser {
 }
 
 const authUsers: AuthUser[] = [
-  { id: randomUUID(), email: 'admin@spf.io', password: 'admin123', created_at: new Date().toISOString() },
+  { id: randomUUID(), email: 'admin@spf.io', password: 'adminspfio123', created_at: new Date().toISOString() },
 ]
 
 function fakeToken(user: AuthUser): string {

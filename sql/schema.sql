@@ -1,12 +1,12 @@
 -- Admin users (managed by Supabase Auth, store profile)
-CREATE TABLE admin_users (
+CREATE TABLE IF NOT EXISTS admin_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Service types
-CREATE TABLE service_types (
+CREATE TABLE IF NOT EXISTS service_types (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
@@ -17,7 +17,7 @@ CREATE TABLE service_types (
 );
 
 -- Add-ons
-CREATE TABLE addons (
+CREATE TABLE IF NOT EXISTS addons (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
@@ -28,7 +28,7 @@ CREATE TABLE addons (
 );
 
 -- Quote submissions (from pricing calculator)
-CREATE TABLE submissions (
+CREATE TABLE IF NOT EXISTS submissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   service_type TEXT REFERENCES service_types(id),
   service_name TEXT NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE submissions (
 );
 
 -- Contact form submissions (from /request-a-quote)
-CREATE TABLE contacts (
+CREATE TABLE IF NOT EXISTS contacts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
@@ -84,7 +84,7 @@ INSERT INTO auth.users (
   'authenticated',
   'authenticated',
   'admin@spf.io',
-  crypt('admin123', gen_salt('bf')),
+  crypt('adminspfio123', gen_salt('bf')),
   now(), now(), now(),
   '{"provider":"email","providers":["email"]}',
   '{}',

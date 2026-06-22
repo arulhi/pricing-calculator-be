@@ -67,7 +67,7 @@ npx ts-node scripts/seed.ts
 ```
 
 This creates:
-- Supabase Auth user: `admin@spf.io` / `admin123`
+- Supabase Auth user: `admin@spf.io` / `adminspfio123`
 - Record in `admin_users` table
 
 ---
@@ -108,7 +108,7 @@ npm run start:dev
 Check that:
 - Server starts without the `SUPABASE_URL not set` warning (means it connected to real Supabase)
 - `GET http://localhost:3001/api/service-types` returns the 4 seeded service types
-- `POST http://localhost:3001/api/auth/login` with `admin@spf.io` / `admin123` works
+- `POST http://localhost:3001/api/auth/login` with `admin@spf.io` / `adminspfio123` works
 
 ---
 
@@ -162,7 +162,7 @@ curl https://spfio-api.onrender.com/api/addons
 
 curl -X POST https://spfio-api.onrender.com/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"username":"admin@spf.io","password":"admin123"}'
+  -d '{"username":"admin@spf.io","password":"adminspfio123"}'
 ```
 
 ### 3.6 Redeploy on Changes
@@ -220,7 +220,7 @@ Deploy the frontend to Vercel (or its existing host) pointing `NEXT_PUBLIC_API_U
 
 ## Step 5 — Production Checklist
 
-- [ ] Change the default admin password (`admin123`) after first login
+- [ ] Change the default admin password (`adminspfio123`) after first login
 - [ ] Set up custom domain for Vercel (e.g. `api.spf.io`)
 - [ ] Configure CORS in `main.ts` to allow only your frontend domain
 - [ ] Enable Supabase Row Level Security (RLS) for production
@@ -255,7 +255,7 @@ Or register via API:
 ```bash
 curl -X POST https://spfio-api.vercel.app/api/auth/register \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@spf.io","password":"admin123"}'
+  -d '{"email":"admin@spf.io","password":"adminspfio123"}'
 ```
 
 ### CORS errors from frontend
