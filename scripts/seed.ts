@@ -37,55 +37,58 @@ async function seed() {
   const adminEmail = 'admin@spf.io'
   const adminPassword = 'adminspfio123'
 
-  console.log(`Creating admin user: ${adminEmail}`)
+  console.log(`Checking for existing admin user: ${adminEmail}`)
 
-  let userId: string | null = null
+  // Check if user already exists — if so, delete (SQL-created users have wrong instance_id)
+  const { data: listData } = await sb.auth.admin.listUsers()
+  const existing = listData?.users?.find(u => u.email === adminEmail)
 
+  if (existing) {
+    console.log(`Existing admin found (${existing.id}). Deleting for clean re-creation...`)
+
+    // Remove from public tables first
+    await sb.from('admin_users').delete().eq('email', adminEmail)
+
+    // Delete via admin API
+    const { error: deleteError } = await sb.auth.admin.deleteUser(existing.id)
+    if (deleteError) {
+      console.error('Failed to delete existing user:', deleteError.message)
+      process.exit(1)
+    }
+    console.log('Deleted existing user.')
+  }
+
+  // Create admin user via Admin API (sets correct instance_id)
+  console.log('Creating admin user...')
   const { data, error } = await sb.auth.admin.createUser({
     email: adminEmail,
     password: adminPassword,
+    email_confirm: true,
   })
 
   if (error) {
-    if (error.message.toLowerCase().includes('already')) {
-      console.log('Admin user already exists in Auth. Looking up ID...')
-
-      const { data: listData, error: listError } = await sb.auth.admin.listUsers()
-      if (listError) {
-        console.error('Failed to list users:', listError.message)
-        process.exit(1)
-      }
-
-      const found = listData?.users?.find(u => u.email === adminEmail)
-      if (found) {
-        userId = found.id
-        console.log(`Found existing admin: ${userId}`)
-      } else {
-        console.error(`User ${adminEmail} not found in Auth list.`)
-        process.exit(1)
-      }
-    } else {
-      console.error('Failed to create admin user:', error.message)
-      process.exit(1)
-    }
-  } else {
-    userId = data?.user?.id ?? null
-    if (userId) {
-      console.log(`Admin user created: ${userId}`)
-    }
+    console.error('Failed to create admin user:', error.message)
+    process.exit(1)
   }
 
-  if (userId) {
-    const { error: insertError } = await sb.from('admin_users').upsert(
-      { id: userId, email: adminEmail },
-      { ignoreDuplicates: true },
-    )
+  const userId = data?.user?.id
+  if (!userId) {
+    console.error('User created but no ID returned.')
+    process.exit(1)
+  }
 
-    if (insertError) {
-      console.error('Failed to insert into admin_users:', insertError.message)
-    } else {
-      console.log('admin_users record inserted.')
-    }
+  console.log(`Admin user created: ${userId}`)
+
+  // Insert into admin_users table
+  const { error: insertError } = await sb.from('admin_users').insert({
+    id: userId,
+    email: adminEmail,
+  })
+
+  if (insertError) {
+    console.error('Failed to insert into admin_users:', insertError.message)
+  } else {
+    console.log('admin_users record inserted.')
   }
 
   console.log('\nSeed complete! Login with:')
