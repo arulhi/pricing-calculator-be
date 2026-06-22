@@ -1,14 +1,3 @@
-/**
- * Seed script — creates the initial admin user in Supabase.
- *
- * Usage:
- *   npx ts-node scripts/seed.ts
- *
- * Prerequisites:
- *   - .env file with SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
- *   - sql/schema.sql already run in Supabase SQL Editor
- */
-
 import { createClient } from '@supabase/supabase-js'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -16,7 +5,7 @@ import * as path from 'path'
 function loadEnv() {
   const envPath = path.resolve(__dirname, '..', '.env')
   if (!fs.existsSync(envPath)) {
-    console.error('❌ .env file not found. Copy .env.example to .env and fill in your credentials.')
+    console.error('.env file not found. Copy .env.example to .env and fill in your credentials.')
     process.exit(1)
   }
 
@@ -38,7 +27,7 @@ const supabaseUrl = process.env.SUPABASE_URL
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !serviceRoleKey) {
-  console.error('❌ SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env')
+  console.error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env')
   process.exit(1)
 }
 
@@ -48,7 +37,9 @@ async function seed() {
   const adminEmail = 'admin@spf.io'
   const adminPassword = 'admin123'
 
-  console.log(`Creating admin user: ${adminEmail} / ${adminPassword}`)
+  console.log(`Creating admin user: ${adminEmail}`)
+
+  let userId: string | null = null
 
   const { data, error } = await sb.auth.admin.createUser({
     email: adminEmail,
@@ -56,31 +47,48 @@ async function seed() {
   })
 
   if (error) {
-    if (error.message.includes('already')) {
-      console.log('ℹ️  Admin user already exists.')
+    if (error.message.toLowerCase().includes('already')) {
+      console.log('Admin user already exists in Auth. Looking up ID...')
+
+      const { data: listData, error: listError } = await sb.auth.admin.listUsers()
+      if (listError) {
+        console.error('Failed to list users:', listError.message)
+        process.exit(1)
+      }
+
+      const found = listData?.users?.find(u => u.email === adminEmail)
+      if (found) {
+        userId = found.id
+        console.log(`Found existing admin: ${userId}`)
+      } else {
+        console.error(`User ${adminEmail} not found in Auth list.`)
+        process.exit(1)
+      }
     } else {
-      console.error('❌ Failed to create admin user:', error.message)
+      console.error('Failed to create admin user:', error.message)
       process.exit(1)
     }
   } else {
-    console.log(`✅ Admin user created: ${data.user.id}`)
+    userId = data?.user?.id ?? null
+    if (userId) {
+      console.log(`Admin user created: ${userId}`)
+    }
   }
 
-  // Also insert into admin_users table
-  if (data?.user) {
+  if (userId) {
     const { error: insertError } = await sb.from('admin_users').upsert(
-      { id: data.user.id, email: adminEmail },
+      { id: userId, email: adminEmail },
       { ignoreDuplicates: true },
     )
 
     if (insertError) {
-      console.error('❌ Failed to insert into admin_users:', insertError.message)
+      console.error('Failed to insert into admin_users:', insertError.message)
     } else {
-      console.log('✅ admin_users record created.')
+      console.log('admin_users record inserted.')
     }
   }
 
-  console.log('\n🎉 Seed complete! You can now log in at /admin/login with:')
+  console.log('\nSeed complete! Login with:')
   console.log('   Email:    admin@spf.io')
   console.log('   Password: admin123')
 }
