@@ -1,6 +1,4 @@
 -- Admin users (managed by Supabase Auth, store profile)
--- The admin user is created via scripts/seed.ts, not seeded here,
--- because the UUID comes from Supabase Auth at creation time.
 CREATE TABLE admin_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
@@ -74,3 +72,39 @@ INSERT INTO addons (id, name, description, price, unit) VALUES
   ('ai-customization', 'AI Customization', 'Train AI on your terminology & style', 500, 'project'),
   ('support', 'On-Call Support', 'Dedicated technician during your event', 150, 'event'),
   ('polls', 'Multilingual Polls', 'Interactive polls in multiple languages', 25, 'event');
+
+-- Seed admin user (requires pgcrypto, enabled by default in Supabase)
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, created_at, updated_at,
+  raw_app_meta_data, raw_user_meta_data, is_super_admin, is_sso_user
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  gen_random_uuid(),
+  'authenticated',
+  'authenticated',
+  'admin@spf.io',
+  crypt('admin123', gen_salt('bf')),
+  now(), now(), now(),
+  '{"provider":"email","providers":["email"]}',
+  '{}',
+  false,
+  false
+) ON CONFLICT (email) DO NOTHING;
+
+INSERT INTO auth.identities (
+  id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+)
+SELECT
+  gen_random_uuid(),
+  id,
+  jsonb_build_object('sub', id::text, 'email', email),
+  'email',
+  now(), now(), now()
+FROM auth.users
+WHERE email = 'admin@spf.io'
+  AND NOT EXISTS (SELECT 1 FROM auth.identities WHERE provider = 'email' AND user_id = auth.users.id);
+
+INSERT INTO public.admin_users (id, email)
+SELECT id, email FROM auth.users WHERE email = 'admin@spf.io'
+ON CONFLICT (email) DO NOTHING;
