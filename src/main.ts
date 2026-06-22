@@ -5,20 +5,34 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import serverlessExpress from '@vendia/serverless-express'
 import { AppModule } from './app.module'
 import express from 'express'
+import cors from 'cors'
+
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'https://spf.io',
+  /\.vercel\.app$/,
+]
 
 let cachedServer
 
 async function createApp() {
   const expressApp = express()
+
+  expressApp.use(cors({
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true)
+      const allowed = ALLOWED_ORIGINS.some((o) =>
+        typeof o === 'string' ? o === origin : o.test(origin),
+      )
+      cb(null, allowed)
+    },
+    credentials: true,
+  }))
+
   const app = await NestFactory.create(
     AppModule,
     new ExpressAdapter(expressApp),
   )
-
-  app.enableCors({
-    origin: ['http://localhost:3000', 'https://spf.io'],
-    credentials: true,
-  })
 
   const config = new DocumentBuilder()
     .setTitle('spf.io Pricing Calculator API')
@@ -55,7 +69,13 @@ if (process.env.NODE_ENV !== 'production') {
     const app = await NestFactory.create(AppModule)
 
     app.enableCors({
-      origin: ['http://localhost:3000', 'https://spf.io'],
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true)
+        const allowed = ALLOWED_ORIGINS.some((o) =>
+          typeof o === 'string' ? o === origin : o.test(origin),
+        )
+        cb(null, allowed)
+      },
       credentials: true,
     })
 

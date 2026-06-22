@@ -27,6 +27,7 @@
   "devDependencies": {
     "@nestjs/cli": "^10.4.0",
     "@nestjs/schematics": "^10.1.0",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
     "typescript": "^5.8.0"
