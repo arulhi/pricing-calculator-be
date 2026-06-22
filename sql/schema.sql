@@ -64,14 +64,16 @@ INSERT INTO service_types (id, name, description, rate, unit) VALUES
   ('live-events', 'Live Events', 'Real-time captions, translations & streaming', 150, 'hour'),
   ('content', 'Content Translation', 'Audio, video, slides & documents', 100, 'hour'),
   ('conversations', 'Conversations', 'Multilingual meetings & discussions', 75, 'hour'),
-  ('multiple', 'Multiple Services', 'Combination of services for your needs', 0, 'hour');
+  ('multiple', 'Multiple Services', 'Combination of services for your needs', 0, 'hour')
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO addons (id, name, description, price, unit) VALUES
   ('text-to-speech', 'Text-to-Speech', 'AI voice output for translations', 50, 'event'),
   ('interpreter', 'Professional Interpreter', 'Human interpreter for live supervision', 200, 'hour'),
   ('ai-customization', 'AI Customization', 'Train AI on your terminology & style', 500, 'project'),
   ('support', 'On-Call Support', 'Dedicated technician during your event', 150, 'event'),
-  ('polls', 'Multilingual Polls', 'Interactive polls in multiple languages', 25, 'event');
+  ('polls', 'Multilingual Polls', 'Interactive polls in multiple languages', 25, 'event')
+ON CONFLICT (id) DO NOTHING;
 
 -- Seed admin user (requires pgcrypto, enabled by default in Supabase)
 INSERT INTO auth.users (
