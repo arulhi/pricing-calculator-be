@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { SupabaseService } from '../database/supabase.service'
 import { CreateServiceTypeDto } from './dto/create-service-type.dto'
 import { UpdateServiceTypeDto } from './dto/update-service-type.dto'
@@ -46,6 +46,14 @@ export class ServiceTypesService {
     }
 
     const updateData: any = {}
+    if (dto.id !== undefined && dto.id !== id) {
+      // ensure new id doesn't already exist
+      const check = await this.supabase.getClient().from('service_types').select().eq('id', dto.id).single()
+      if (check.data) {
+        throw new BadRequestException('Service type ID already exists')
+      }
+      updateData.id = dto.id
+    }
     if (dto.name !== undefined) updateData.name = dto.name
     if (dto.desc !== undefined) updateData.description = dto.desc
     if (dto.rate !== undefined) updateData.rate = dto.rate
