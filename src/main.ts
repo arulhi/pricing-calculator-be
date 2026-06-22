@@ -4,19 +4,11 @@ import { ValidationPipe } from '@nestjs/common'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { AppModule } from './app.module'
 import express from 'express'
-import { Request, Response, NextFunction } from 'express'
+import { Request, Response } from 'express'
 import serverlessExpress from '@vendia/serverless-express'
 
-function corsMiddleware(req: Request, res: Response, next: NextFunction) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  if (req.method === 'OPTIONS') return res.sendStatus(204)
-  next()
-}
-
 function setupApp(app) {
-  app.use(corsMiddleware)
+  app.enableCors({ origin: '*', methods: 'GET,POST,PUT,DELETE,PATCH,OPTIONS', allowedHeaders: 'Content-Type,Authorization' })
   app.use('/health', (_req: Request, res: Response) => res.json({ status: 'ok' }))
 
   const config = new DocumentBuilder()
