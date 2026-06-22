@@ -12,9 +12,10 @@ export class AuthService {
   constructor(private supabase: SupabaseService) {}
 
   async register(dto: RegisterDto) {
+    const authSb = this.supabase.createAuthClient()
     const sb = this.supabase.getClient()
 
-    const { data, error } = await sb.auth.admin.createUser({
+    const { data, error } = await authSb.auth.admin.createUser({
       email: dto.email,
       password: dto.password,
     })
@@ -35,9 +36,9 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const sb = this.supabase.getClient()
+    const authSb = this.supabase.createAuthClient()
 
-    const { data, error } = await sb.auth.signInWithPassword({
+    const { data, error } = await authSb.auth.signInWithPassword({
       email: dto.username,
       password: dto.password,
     })
@@ -50,9 +51,9 @@ export class AuthService {
   }
 
   async getMe(token: string) {
-    const sb = this.supabase.getClient()
+    const authSb = this.supabase.createAuthClient()
 
-    const { data, error } = await sb.auth.getUser(token)
+    const { data, error } = await authSb.auth.getUser(token)
 
     if (error || !data.user) {
       throw new UnauthorizedException('Invalid token')

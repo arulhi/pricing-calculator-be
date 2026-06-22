@@ -23,7 +23,8 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid authorization format')
     }
 
-    const { data, error } = await this.supabase.getClient().auth.getUser(token)
+    const authClient = this.supabase.createAuthClient()
+    const { data, error } = await authClient.auth.getUser(token)
 
     if (error || !data.user) {
       throw new UnauthorizedException('Invalid or expired token')
